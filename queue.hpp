@@ -15,7 +15,7 @@ pthread_mutex_t lock;
 pthread_cond_t cond1;
 
 // TODO: 1.check about the note (void*)
-// 2.
+// 2. check if the assume is right
  
 struct QNode {
     string data;
@@ -52,17 +52,14 @@ struct Queue {
     void enQ(void* x) {
 
         pthread_mutex_lock(&lock);
-
         string *sp = static_cast<string*>(x);
 
         // Create a new LL node
         QNode* temp = new QNode(*sp);
- 
         // If queue is empty, then
         // new node is front and rear both
         if (rear == NULL) {
             front = rear = temp;
-            return;
         }
  
         // Add the new node at
@@ -110,7 +107,7 @@ struct active_object {
 pthread_t tmp_thread;
 
 
-active_object newAO (Queue* q, void (*f1)(QNode*), void (*f2)(QNode*)) {
+active_object* newAO (Queue* q, void (*f1)(QNode*), void (*f2)(QNode*)) {
     tmp_thread = pthread_self();
     //QNode* tmp = q.front;
 
@@ -125,16 +122,17 @@ active_object newAO (Queue* q, void (*f1)(QNode*), void (*f2)(QNode*)) {
     //     (*f2)(tmp);
     //     tmp = tmp->next;
     // }
-    active_object ao;
-    ao.func1 = (void*)f1;
-    ao.func2 = (void*)f2;
-    ao.queue = q;
+
+    active_object* ao = new active_object();
+    ao->func1 = (void*)f1;
+    ao->func2 = (void*)f2;
+    ao->queue = q;
     return ao;
 
 }
 
-void destroyAO (Queue* q, void (*f1)(QNode*), void (*f2)(QNode*)) {
-    q->destroyQ(); //clear the Queue
-    // pthread_cancel(tmp_thread); //cancel the thread
-    // pthread_exit(NULL); //terminate
+void destroyAO (active_object* ao) {
+    ao->queue->destroyQ(); //clear the Queue
+    pthread_cancel(tmp_thread); //kill the thread
+    pthread_exit(NULL); //terminate the program
 }

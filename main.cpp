@@ -22,7 +22,7 @@ int main() {
     void* p3 = &s3;
     void* p4 = &s4;
     void* p5 = &s5;
-
+    
     q.enQ(p1);
     q.enQ(p2);
     q.enQ(p3);
@@ -34,8 +34,9 @@ int main() {
     q.deQ();
     q.deQ();
     
-    //active_object ao = newAO(&q, f1, f2);
-    cout << "Queue Front : " << (q.front)->data << endl;
-    cout << "Queue Rear : " << (q.rear)->data << endl;
-    q.destroyQ();
+    active_object* ao = newAO(&q, f1, f2);
+    destroyAO(ao);
+    // cout << "Queue Front : " << (q.front)->data << endl;
+    // cout << "Queue Rear : " << (q.rear)->data << endl;
+    // q.destroyQ();
 }
