@@ -49,12 +49,14 @@ struct Queue {
 
     }
  
-    void enQ(string x) {
+    void enQ(void* x) {
 
         pthread_mutex_lock(&lock);
- 
+
+        string *sp = static_cast<string*>(x);
+
         // Create a new LL node
-        QNode* temp = new QNode(x);
+        QNode* temp = new QNode(*sp);
  
         // If queue is empty, then
         // new node is front and rear both
