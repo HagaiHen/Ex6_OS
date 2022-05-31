@@ -3,11 +3,11 @@
 
 //for testing
 void f1 (QNode* n) {
-    n->data += 1;
+    n->data = (void*) "1";
 }
 
 void f2 (QNode* n) {
-    n->data += 2;
+    n->data = (void*) "2";
 }
 //end
 
@@ -36,7 +36,7 @@ int main() {
     
     active_object* ao = newAO(&q, f1, f2);
     destroyAO(ao);
-    // cout << "Queue Front : " << (q.front)->data << endl;
-    // cout << "Queue Rear : " << (q.rear)->data << endl;
+    cout << "Queue Front : " << (q.front)->data << endl;
+    cout << "Queue Rear : " << (q.rear)->data << endl;
     // q.destroyQ();
 }

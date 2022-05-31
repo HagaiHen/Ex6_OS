@@ -18,9 +18,9 @@ pthread_cond_t cond1;
 // 2. check if the assume is right
  
 struct QNode {
-    string data;
+    void* data;
     QNode* next;
-    QNode(string d) {
+    QNode(void* d) {
         data = d;
         next = NULL;
     }
@@ -50,12 +50,11 @@ struct Queue {
     }
  
     void enQ(void* x) {
-
         pthread_mutex_lock(&lock);
-        string *sp = static_cast<string*>(x);
+        // string *sp = static_cast<string*>(x);
 
         // Create a new LL node
-        QNode* temp = new QNode(*sp);
+        QNode* temp = new QNode(x);
         // If queue is empty, then
         // new node is front and rear both
         if (rear == NULL) {
@@ -66,6 +65,7 @@ struct Queue {
         // the end of queue and change rear
         rear->next = temp;
         rear = temp;
+        
         pthread_mutex_unlock(&lock);
     }
  
@@ -108,25 +108,17 @@ pthread_t tmp_thread;
 
 
 active_object* newAO (Queue* q, void (*f1)(QNode*), void (*f2)(QNode*)) {
-    tmp_thread = pthread_self();
-    //QNode* tmp = q.front;
-
-    // while(tmp != NULL) {
-    //     (*f1)(tmp);
-    //     tmp = tmp->next;
-    // }
-
-    // tmp = q.front;
     
-    // while(tmp != NULL) {
-    //     (*f2)(tmp);
-    //     tmp = tmp->next;
-    // }
-
+    //TODO: create a new thread ?
+    
+    tmp_thread = pthread_self();
     active_object* ao = new active_object();
-    ao->func1 = (void*)f1;
-    ao->func2 = (void*)f2;
+    ao->func1 = (void*) f1;
+    ao->func2 = (void*) f2;
     ao->queue = q;
+    f1(ao->queue->front);
+    f2(ao->queue->front);
+    ao->queue->deQ();
     return ao;
 
 }
