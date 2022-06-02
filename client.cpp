@@ -78,16 +78,12 @@ int main(int argc, char *argv[]) {
     char str[MAXDATASIZE];
     char *splitted[MAXDATASIZE];
     while (1) {
-        printf("Enter Command: ");
+        printf("Enter Comment: ");
         fgets(str, MAXDATASIZE, stdin);
         send(sockfd, str, MAXDATASIZE, 0);
-        if (!(strcmp(str, "q"))) {
-            break;
-        }
-        if (!(strcmp(str, "TOP\n"))) {
-            recv(sockfd, str, MAXDATASIZE, 0);
-            printf("OUTPUT: %s\n", str);
-        }
+        recv(sockfd, str, MAXDATASIZE, 0);
+        printf("%s\n", str);
+        
     }
 
     close(sockfd);

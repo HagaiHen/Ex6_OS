@@ -28,33 +28,110 @@
 #define MAXDATASIZE 1024 // max number of bytes we can get at once
 Queue q;
 
-static void *handle_client(void *new_fd) {
+
+//9980
+
+Queue *q1 = new Queue();
+Queue *q2 = new Queue();
+Queue *q3 = new Queue();
+
+
+void caesar_cypher (void* data) {
+
+    char ch;
+    int key = 1;
+    char* msg = (char*) data;
+
+    for(int i = 0; msg[i] != '\0'; ++i) {
+         ch = msg[i];
+
+         //encrypt for lowercase letter
+         if (ch >= 'a' && ch <= 'z'){
+            ch = ch + key;
+            if (ch > 'z') {
+               ch = ch - 'z' + 'a' - 1;
+            }  
+            msg[i] = ch;
+         }
+         //encrypt for uppercase letter
+         else if (ch >= 'A' && ch <= 'Z'){
+            ch = ch + key;
+            if (ch > 'Z'){
+               ch = ch - 'Z' + 'A' - 1;
+            }
+            msg[i] = ch;
+         }
+      }
+}
+
+void convert (void* data) {
+    char ch;
+    int key = 1;
+    char* msg = (char*) data;
+    for (int i = 0; msg[i] != '\0'; ++i) {
+        ch = msg[i];  
+        //convert for lowercase letter
+        if (ch >= 'a' && ch <= 'z'){
+            ch = (ch - 'a') + 'A';
+            msg[i] = ch;
+        }
+        //convert for uppercase letter
+        else if (ch >= 'A' && ch <= 'Z') {
+                ch = (ch - 'A') + 'a';
+                msg[i] = ch;
+        }
+    }
+    
+
+}
+
+void enQ_2(void* x) {
+    q2->enQ(x);
+}
+
+void enQ_3(void* x) {
+    q3->enQ(x);
+}
+
+void send_to(void* x) {
+    char* data = (char*)x;
+    if (send(*q3->get_fd(), data, strlen(data), 0) < 0) {
+        perror("sending");
+        exit(1);
+    }
+}
+
+static void * handle_client(void *new_fd) {
+    
     int* ptr = (int*) new_fd;
     int sock = *ptr;
-    // string str;
     char str[MAXDATASIZE];
     char get[MAXDATASIZE];
-    char *splitted[MAXDATASIZE];
-    
+    active_object* ao1 = nullptr, *ao2, *ao3;    
     while (1) {
         recv(sock,str,MAXDATASIZE,0);
-        void* p = &str;
-        q.enQ(p);
+        q1->enQ(str);
+        q3->set_fd(sock);
         if (!(strcmp(str, "q\n"))) {
             break;
         }
-
+        if (!ao1) {
+            ao1 = newAO(q1, caesar_cypher, enQ_2);
+            ao2 = newAO(q2, convert, enQ_3);
+            ao3 = newAO(q3, send_to, NULL);
+        }
     }
-
+    destroyAO(ao1);
+    destroyAO(ao2);
+    destroyAO(ao3);
+    
     return NULL;
 }
 
 void sigchld_handler(int s) {
     // waitpid() might overwrite errno, so we save and restore it:
     int saved_errno = errno;
-
     while (waitpid(-1, NULL, WNOHANG) > 0);
-
     errno = saved_errno;
 }
 
@@ -141,14 +218,17 @@ int main(void) {
             perror("accept");
             continue;
         }
-
         inet_ntop(their_addr.ss_family,
             get_in_addr((struct sockaddr *)&their_addr),
             s, sizeof s);
         printf("server: got connection from %s\n", s);
-        
-        if (!fork()) { // this is the child process
-            handle_client(&new_fd);
+
+        pthread_t thread_id;
+        int * ptr = (int*) malloc (sizeof(int));
+        *ptr = new_fd;
+        if (pthread_create(&thread_id, NULL, handle_client, ptr) != 0) { 
+            perror("start thread");
+            close(new_fd);
         }
         
     }
